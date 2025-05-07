@@ -61,6 +61,33 @@ app.get('/api/tasks', (req, res) => {
     res.json(simplifiedTasks);
 });
 
+// Create a new task
+app.post('/api/tasks', (req, res) => {
+    console.log('POST /api/tasks - Request received', req.body);
+
+    // Validate request body
+    if (!req.body.title) {
+        return res.status(400).json({ message: 'Task title is required' });
+    }
+
+    // Generate a new ID (simple implementation for demo)
+    const newId = (tasks.length > 0)
+        ? String(Math.max(...tasks.map(t => parseInt(t.id))) + 1)
+        : '1';
+
+    const newTask = {
+        id: newId,
+        title: req.body.title,
+        description: req.body.description || '',
+        completed: req.body.completed || false,
+        priority: req.body.priority || 'Medium'
+    };
+
+    tasks.push(newTask);
+    console.log('New task created:', newTask.id);
+    res.status(201).json(newTask);
+});
+
 app.get('/api/tasks/:id', (req, res) => {
     console.log(`GET /api/tasks/${req.params.id} - Request received`);
 
@@ -73,6 +100,22 @@ app.get('/api/tasks/:id', (req, res) => {
         console.log('Task not found');
         res.status(404).json({ message: 'Task not found' });
     }
+});
+
+// Delete a task
+app.delete('/api/tasks/:id', (req, res) => {
+    console.log(`DELETE /api/tasks/${req.params.id} - Request received`);
+
+    const taskIndex = tasks.findIndex(t => t.id === req.params.id);
+
+    if (taskIndex === -1) {
+        console.log('Task not found');
+        return res.status(404).json({ message: 'Task not found' });
+    }
+
+    const deletedTask = tasks.splice(taskIndex, 1)[0];
+    console.log(`Task ${deletedTask.id} deleted`);
+    res.json({ message: 'Task deleted successfully' });
 });
 
 // Update task completion status

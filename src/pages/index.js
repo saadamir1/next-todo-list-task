@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import DarkModeToggle from '@/components/DarkModeToggle';
-import { CheckSquare, Loader, Square, AlertCircle } from 'lucide-react';
+import { CheckSquare, Loader, Square, AlertCircle, Plus, X, Trash2 } from 'lucide-react';
 
 export default function HomePage() {
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [updating, setUpdating] = useState(null);
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [newTask, setNewTask] = useState({ title: '', description: '', priority: 'Medium' });
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL
@@ -50,6 +53,79 @@ export default function HomePage() {
 
         fetchTasks();
     }, []);
+
+    // Add new task
+    const handleAddTask = async (e) => {
+        e.preventDefault();
+
+        if (!newTask.title.trim()) return;
+
+        setSubmitting(true);
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL
+            ? `${process.env.NEXT_PUBLIC_API_URL}/api/tasks`
+            : '/api/tasks';
+
+        try {
+            const res = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newTask)
+            });
+
+            if (!res.ok) {
+                throw new Error('Failed to add task');
+            }
+
+            const createdTask = await res.json();
+
+            // Add the new task to the list
+            setTasks(prevTasks => [...prevTasks, createdTask]);
+
+            // Reset the form
+            setNewTask({ title: '', description: '', priority: 'Medium' });
+            setShowAddForm(false);
+
+        } catch (err) {
+            console.error('Error adding task:', err);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    // Delete task
+    const handleDeleteTask = async (taskId, e) => {
+        e.preventDefault();  // Prevent navigation to task detail page
+        e.stopPropagation(); // Stop event bubbling
+
+        if (updating === taskId) return; // Prevent double clicks
+
+        setUpdating(taskId);
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL
+            ? `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${taskId}`
+            : `/api/tasks/${taskId}`;
+
+        try {
+            const res = await fetch(apiUrl, {
+                method: 'DELETE'
+            });
+
+            if (!res.ok) {
+                throw new Error('Failed to delete task');
+            }
+
+            // Remove the task from the list
+            setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+
+        } catch (err) {
+            console.error('Error deleting task:', err);
+        } finally {
+            setUpdating(null);
+        }
+    };
 
     const toggleTaskCompletion = async (taskId, e) => {
         e.preventDefault();  // Prevent navigation to task detail page
@@ -101,8 +177,78 @@ export default function HomePage() {
                         My Tasks
                     </h1>
                 </div>
-                <DarkModeToggle />
+                <div className="flex items-center">
+                    <button
+                        onClick={() => setShowAddForm(!showAddForm)}
+                        className="mr-4 flex items-center bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-md text-sm transition-colors"
+                    >
+                        {showAddForm ? <X size={16} className="mr-1" /> : <Plus size={16} className="mr-1" />}
+                        {showAddForm ? 'Cancel' : 'Add Task'}
+                    </button>
+                    <DarkModeToggle />
+                </div>
             </div>
+
+            {/* Add Task Form */}
+            {showAddForm && (
+                <div className="mb-6 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                    <h2 className="text-lg font-medium text-gray-800 dark:text-white mb-3">Add New Task</h2>
+                    <form onSubmit={handleAddTask}>
+                        <div className="mb-4">
+                            <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Title *
+                            </label>
+                            <input
+                                type="text"
+                                id="title"
+                                value={newTask.title}
+                                onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-white"
+                                placeholder="Enter task title"
+                                required
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Description
+                            </label>
+                            <textarea
+                                id="description"
+                                value={newTask.description}
+                                onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-white"
+                                placeholder="Enter task description"
+                                rows="3"
+                            ></textarea>
+                        </div>
+                        <div className="mb-4">
+                            <label htmlFor="priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Priority
+                            </label>
+                            <select
+                                id="priority"
+                                value={newTask.priority}
+                                onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+                                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-white"
+                            >
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                        <div className="flex justify-end">
+                            <button
+                                type="submit"
+                                disabled={submitting || !newTask.title.trim()}
+                                className="flex items-center bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 dark:disabled:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
+                            >
+                                {submitting ? <Loader size={16} className="mr-2 animate-spin" /> : <Plus size={16} className="mr-2" />}
+                                Add Task
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
 
             {loading ? (
                 <div className="flex justify-center items-center h-40">
@@ -148,14 +294,23 @@ export default function HomePage() {
                                                 <h2 className={`font-medium text-lg ${task.completed ? 'text-gray-500 line-through dark:text-gray-400' : 'text-gray-800 dark:text-white'}`}>
                                                     {task.title}
                                                 </h2>
-                                                {task.priority && (
-                                                    <span className={`ml-auto px-2 py-1 text-xs rounded-full ${task.priority === 'High' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                                                            task.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                                                                'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                                        }`}>
-                                                        {task.priority}
-                                                    </span>
-                                                )}
+                                                <div className="flex ml-auto">
+                                                    {task.priority && (
+                                                        <span className={`mr-2 px-2 py-1 text-xs rounded-full ${task.priority === 'High' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                                                                task.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                                                    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                            }`}>
+                                                            {task.priority}
+                                                        </span>
+                                                    )}
+                                                    <button
+                                                        onClick={(e) => handleDeleteTask(task.id, e)}
+                                                        className="text-gray-400 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
+                                                        aria-label="Delete task"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
                                             </div>
                                             {task.description && (
                                                 <p className="text-sm text-gray-500 dark:text-gray-300 mt-2 ml-7">
