@@ -8,6 +8,7 @@ export default function TaskPage() {
     const [task, setTask] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [updating, setUpdating] = useState(false);
 
     useEffect(() => {
         if (!id) return;
@@ -34,6 +35,38 @@ export default function TaskPage() {
                 setLoading(false);
             });
     }, [id]);
+
+    const toggleTaskCompletion = async () => {
+        if (updating || !task) return;
+
+        setUpdating(true);
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL
+            ? `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${id}/toggle`
+            : `/api/tasks/${id}/toggle`;
+
+        try {
+            const res = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!res.ok) {
+                throw new Error('Failed to update task');
+            }
+
+            const updatedTask = await res.json();
+            setTask(updatedTask);
+
+        } catch (err) {
+            console.error('Error updating task:', err);
+            // Could add error handling UI here
+        } finally {
+            setUpdating(false);
+        }
+    };
 
     if (error) return (
         <div className="max-w-xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg dark:bg-gray-800 text-center">
@@ -67,11 +100,19 @@ export default function TaskPage() {
 
             <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
                 <div className="flex items-center mb-4">
-                    {task.completed ? (
-                        <CheckSquare className="text-green-500 mr-3 flex-shrink-0" size={24} />
-                    ) : (
-                        <Square className="text-gray-400 mr-3 flex-shrink-0" size={24} />
-                    )}
+                    <div
+                        className="cursor-pointer"
+                        onClick={toggleTaskCompletion}
+                        aria-label={task.completed ? "Mark as incomplete" : "Mark as complete"}
+                    >
+                        {updating ? (
+                            <Loader className="text-blue-500 mr-3 flex-shrink-0 animate-spin" size={24} />
+                        ) : task.completed ? (
+                            <CheckSquare className="text-green-500 mr-3 flex-shrink-0 hover:text-green-600" size={24} />
+                        ) : (
+                            <Square className="text-gray-400 mr-3 flex-shrink-0 hover:text-gray-600" size={24} />
+                        )}
+                    </div>
                     <h1 className={`text-3xl font-bold ${task.completed ? 'text-gray-500 line-through dark:text-gray-400' : 'text-gray-800 dark:text-white'}`}>
                         {task.title}
                     </h1>

@@ -7,6 +7,7 @@ export default function HomePage() {
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [updating, setUpdating] = useState(null);
 
     useEffect(() => {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL
@@ -50,6 +51,47 @@ export default function HomePage() {
         fetchTasks();
     }, []);
 
+    const toggleTaskCompletion = async (taskId, e) => {
+        e.preventDefault();  // Prevent navigation to task detail page
+        e.stopPropagation(); // Stop event bubbling
+
+        if (updating === taskId) return; // Prevent double clicks
+
+        setUpdating(taskId);
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL
+            ? `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${taskId}/toggle`
+            : `/api/tasks/${taskId}/toggle`;
+
+        try {
+            const res = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!res.ok) {
+                throw new Error('Failed to update task');
+            }
+
+            const updatedTask = await res.json();
+
+            // Update the tasks list with the updated task
+            setTasks(prevTasks =>
+                prevTasks.map(task =>
+                    task.id === taskId ? { ...task, completed: updatedTask.completed } : task
+                )
+            );
+
+        } catch (err) {
+            console.error('Error updating task:', err);
+            // Could add error handling UI here
+        } finally {
+            setUpdating(null);
+        }
+    };
+
     return (
         <div className="max-w-4xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg dark:bg-gray-800">
             <div className="flex justify-between items-center mb-6">
@@ -89,11 +131,20 @@ export default function HomePage() {
                                     <a className="block">
                                         <div className="p-4 border rounded-lg hover:shadow-md transition-shadow duration-200 bg-gray-50 dark:bg-gray-700 hover:bg-white dark:hover:bg-gray-600">
                                             <div className="flex items-center">
-                                                {task.completed ? (
-                                                    <CheckSquare className="text-green-500 mr-2 flex-shrink-0" size={20} />
-                                                ) : (
-                                                    <Square className="text-gray-400 mr-2 flex-shrink-0" size={20} />
-                                                )}
+                                                {/* Make checkbox clickable */}
+                                                <div
+                                                    className="cursor-pointer"
+                                                    onClick={(e) => toggleTaskCompletion(task.id, e)}
+                                                    aria-label={task.completed ? "Mark as incomplete" : "Mark as complete"}
+                                                >
+                                                    {updating === task.id ? (
+                                                        <Loader className="text-blue-500 mr-2 flex-shrink-0 animate-spin" size={20} />
+                                                    ) : task.completed ? (
+                                                        <CheckSquare className="text-green-500 mr-2 flex-shrink-0 hover:text-green-600" size={20} />
+                                                    ) : (
+                                                        <Square className="text-gray-400 mr-2 flex-shrink-0 hover:text-gray-600" size={20} />
+                                                    )}
+                                                </div>
                                                 <h2 className={`font-medium text-lg ${task.completed ? 'text-gray-500 line-through dark:text-gray-400' : 'text-gray-800 dark:text-white'}`}>
                                                     {task.title}
                                                 </h2>

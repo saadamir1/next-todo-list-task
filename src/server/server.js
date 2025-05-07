@@ -38,7 +38,7 @@ const tasks = [
     {
         id: '4',
         title: 'Schedule dentist appointment',
-        description: 'Call Dr. Smiths office to schedule the annual checkup and cleaning. Their number is 555-1234. Best time to call is morning hours.',
+        description: 'Call Dr. Smiths office to schedule the annual checkup and cleaning.Their number is 555-1234. Best time to call is morning hours.',
         completed: false,
         priority: 'Medium'
     }
@@ -73,6 +73,24 @@ app.get('/api/tasks/:id', (req, res) => {
         console.log('Task not found');
         res.status(404).json({ message: 'Task not found' });
     }
+});
+
+// Update task completion status
+app.put('/api/tasks/:id/toggle', (req, res) => {
+    console.log(`PUT /api/tasks/${req.params.id}/toggle - Request received`);
+
+    const taskIndex = tasks.findIndex(t => t.id === req.params.id);
+
+    if (taskIndex === -1) {
+        console.log('Task not found');
+        return res.status(404).json({ message: 'Task not found' });
+    }
+
+    // Toggle the completed status
+    tasks[taskIndex].completed = !tasks[taskIndex].completed;
+
+    console.log(`Task ${tasks[taskIndex].id} completed status toggled to: ${tasks[taskIndex].completed}`);
+    res.json(tasks[taskIndex]);
 });
 
 // Root route for testing
