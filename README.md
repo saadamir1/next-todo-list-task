@@ -1,46 +1,99 @@
-# Product Catalog Task
+# Next-Todo-List-Task
 
-A very basic product catalog application built with Next.js that displays product data from the Fake Store API. This simple demo was created as part of a lab assignment.
+A simple, elegant task management application built with Next.js and Express.
 
 ## Features
 
-- Fetches real product data from Fake Store API
-- Responsive grid layout for product listings
-- Detailed product view with descriptions
+- Create, read, update, and delete tasks
+- Toggle task completion status
+- Set priority levels (Low, Medium, High)
 - Dark mode support
-- Clean, modern UI
+- Responsive design
 
-## Technologies Used
+## Tech Stack
 
-- Next.js
-- SWR for data fetching
-- React Hooks
-- Tailwind CSS
-- Lucide React for icons
+- **Frontend**: Next.js, React, Tailwind CSS, Lucide React icons
+- **Backend**: Express.js
+- **Structure**: Full-stack JavaScript application
 
-## Setup
+## Getting Started
 
-1. Clone the repository:
+### Prerequisites
+
+- Node.js (v14 or later)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository
+   ```bash
+   git clone https://github.com/yourusername/next-todo-list-task.git
+   cd next-todo-list-task
    ```
-   git clone https://github.com/saadamir1/product-catalog-task.git
-   ```
 
-2. Install dependencies:
-   ```
-   cd product-catalog-task
+2. Install dependencies
+   ```bash
+   # Install frontend dependencies
    npm install
+   
+   # Install backend dependencies
+   cd server
+   npm install
+   cd ..
    ```
 
-3. Run the development server:
+3. Set up environment variables
+   ```bash
+   # Create .env file in root directory
+   echo "NEXT_PUBLIC_API_URL=http://localhost:5000" > .env
    ```
+
+### Running the Application
+
+1. Start the backend server
+   ```bash
+   # From the server directory
+   npm start
+   ```
+
+2. In a new terminal, start the frontend
+   ```bash
+   # From the root directory
    npm run dev
    ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+3. Open your browser and navigate to `http://localhost:3000`
 
-## API Routes
+## Project Structure
 
-- `/api/products` - Fetches all products
-- `/api/products/[id]` - Fetches a single product by ID
+```
+next-todo-list-task/
+├── .next/               # Next.js build output
+├── components/          # React components
+│   └── DarkModeToggle.tsx
+├── pages/               # Next.js pages
+│   ├── task/
+│   │   └── [id].js      # Task detail page
+│   ├── _app.js          # Custom App component
+│   └── index.js         # Task list page
+├── public/              # Public assets
+├── server/              # Express backend
+│   └── server.js        # API server
+├── styles/              # CSS styles
+├── .env                 # Environment variables
+└── next.config.ts       # Next.js configuration
+```
 
-This project is a very basic implementation intended only as a simple lab task demonstration. It lacks many features that would be necessary in a production application, such as error boundaries, comprehensive testing, and proper state management.
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/tasks` | GET | Get all tasks |
+| `/api/tasks` | POST | Create a new task |
+| `/api/tasks/:id` | GET | Get a specific task |
+| `/api/tasks/:id` | DELETE | Delete a task |
+| `/api/tasks/:id/toggle` | PUT | Toggle task completion status |
+
+## Author
+
+Saad Amir - [Medium](https://medium.com/@saadamir1) - [GitHub](https://github.com/saadamir1) - [Email](mailto:saadamir070@gmail.com)
