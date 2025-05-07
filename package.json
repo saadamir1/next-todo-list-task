@@ -1,0 +1,32 @@
+{
+  "name": "task-manager",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@shadcn/ui": "^0.0.4",
+    "autoprefixer": "^10.4.20",
+    "clsx": "^1.2.1",
+    "lucide-react": "^0.503.0",
+    "next": "latest",
+    "postcss": "^8.4.20",
+    "react": "latest",
+    "react-dom": "latest",
+    "swr": "^2.3.3",
+    "tailwindcss": "^3.2.4",
+    "typescript": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.5",
+    "@types/react": "19.0.5",
+    "@typescript-eslint/eslint-plugin": "^5.10.0",
+    "@typescript-eslint/parser": "^5.10.0",
+    "eslint": "^8.12.0",
+    "eslint-config-next": "latest"
+  }
+}
