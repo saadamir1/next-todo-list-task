@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { ArrowLeft, Loader, Info, CheckSquare, Square } from 'lucide-react';
+import { ArrowLeft, Loader, Info, CheckSquare, Square, Trash2 } from 'lucide-react';
 
 export default function TaskPage() {
     const router = useRouter();
@@ -68,6 +68,34 @@ export default function TaskPage() {
         }
     };
 
+    const handleDeleteTask = async () => {
+        if (updating || !task) return;
+
+        setUpdating(true);
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL
+            ? `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${id}`
+            : `/api/tasks/${id}`;
+
+        try {
+            const res = await fetch(apiUrl, {
+                method: 'DELETE'
+            });
+
+            if (!res.ok) {
+                throw new Error('Failed to delete task');
+            }
+
+            // Redirect back to the task list
+            router.push('/');
+
+        } catch (err) {
+            console.error('Error deleting task:', err);
+            setError('Failed to delete task. Please try again.');
+            setUpdating(false);
+        }
+    };
+
     if (error) return (
         <div className="max-w-xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg dark:bg-gray-800 text-center">
             <Info size={40} className="mx-auto text-red-500 mb-2" />
@@ -125,13 +153,28 @@ export default function TaskPage() {
                 {task.priority && (
                     <div className="mt-6 ml-9">
                         <span className={`inline-block px-3 py-1 rounded-md text-sm font-medium ${task.priority === 'High' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                                task.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                                    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                            task.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                             }`}>
                             Priority: {task.priority}
                         </span>
                     </div>
                 )}
+
+                <div className="mt-8 ml-9">
+                    <button
+                        onClick={handleDeleteTask}
+                        disabled={updating}
+                        className="flex items-center px-4 py-2 bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white rounded-md transition-colors"
+                    >
+                        {updating ? (
+                            <Loader size={16} className="mr-2 animate-spin" />
+                        ) : (
+                            <Trash2 size={16} className="mr-2" />
+                        )}
+                        Delete Task
+                    </button>
+                </div>
             </div>
         </div>
     );
